@@ -1,13 +1,17 @@
 import math
 
 
-class Catalog(object):
+class Item(object):
 
-    # represents the set of products available in the simulation
-    # the only attribute in this case is their weight
-    # the data is stored in a dictionary: {product_id: product_weight}
-    def __init__(self, weight_dict):
-        self.weight = weight_dict
+    # each item is represented by a item_id and weight
+
+    n_items = 400
+    n_instances = 0
+
+    def __init__(self, weight):
+        Item.n_instances += 1
+        self.id = Item.n_instances - 1
+        self.weight = weight
 
 
 class Position(object):
@@ -22,6 +26,9 @@ class Position(object):
 
     def distance(self, pos2):
         return int(math.ceil(math.sqrt((self.x - pos2.x) ** 2 + (self.y - pos2.y) ** 2)))
+
+    def __str__(self):
+        return str((self.x, self.y))
 
 
 class Grid(object):

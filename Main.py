@@ -1,5 +1,5 @@
 ## imports
-from class_other import Catalog, Grid, Instructions, Position
+from class_other import Item, Grid, Instructions, Position
 from class_Drone import Drone
 from class_Order import Order
 from class_Warehouse import Warehouse
@@ -13,22 +13,25 @@ if __name__ == '__main__':
     ### load data, create objects
     grid = Grid()
     instructions = Instructions()
-    catalog = Catalog(weight)
 
-    wh = {}
-    for i in range(Warehouse.n_warehouses):
-        wh[i] = Warehouse(warehouse_raw[i][0], warehouse_raw[i][1], warehouse_raw[i][2])
+    items = {i: Item(int(weight[i])) for i in range(Item.n_items)}
 
-    drones = {}
-    for i in range(Drone.n_drones):
-        drones[i] = Drone()
+    warehouses = {i: Warehouse(warehouse_raw[i][0], warehouse_raw[i][1], warehouse_raw[i][2])
+                  for i in range(Warehouse.n_warehouses)}
 
-    orders = {}
-    for i in range(Order.n_orders):
-        orders[i] = Order(to_list(orders_raw[i][0])[0], to_list(orders_raw[i][0])[1], to_list(orders_raw[i][2]), wh, catalog)
+    drones = {i: Drone() for i in range(Drone.n_drones)}
 
-    for i in range(10):
-        wh[i].sort_closest_orders()
+    orders = {i: Order(to_list(orders_raw[i][0])[0], to_list(orders_raw[i][0])[1],  # x, y
+                       to_list(orders_raw[i][1]), to_list(orders_raw[i][2]),         # n_items, list_order_items_raw
+                       items) for i in range(Order.n_orders)}
+
+    print(orders[0].order_items[0])
+
+
+
+    # for i in range(10):
+    #     warehouses[i].sort_closest_orders()
+
 
 
     ### data exploration
@@ -40,7 +43,7 @@ if __name__ == '__main__':
     # total_slack2(wh, orders)
 
     ### warehouse sequence
-    determine_wh_seq(wh)
+    # determine_wh_seq(warehouses)
 
     #for drone in drones:
     # sum = 0
