@@ -1,7 +1,7 @@
-from class_other import Grid
+from class_other import Position
 
 
-class Warehouse(Grid):
+class Warehouse(object):
 
     # represents the warehouses, each is located on the grid
     # inventory is stored as a dictionary {product_id: qty in stock}
@@ -10,15 +10,13 @@ class Warehouse(Grid):
     ### these are sorted by weight * distance
     ### the wh can respond to an inquiry from a drone to determine product availability
 
-
     n_warehouses = 10
     instance_created = 0
 
     def __init__(self, x, y, inventory):
         Warehouse.instance_created += 1
         self.id = Warehouse.instance_created - 1
-        self.x = x
-        self.y = y
+        self.position = Position(x, y)
         self.inventory = inventory
         self.closest_orders = []
 

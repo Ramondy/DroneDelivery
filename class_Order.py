@@ -1,8 +1,9 @@
 import math
-from class_other import Grid
+from class_Warehouse import Warehouse
+from class_other import Position
 
 
-class Order(Grid):
+class Order(object):
 
     n_orders = 1250
     instance_created = 0
@@ -10,15 +11,14 @@ class Order(Grid):
     def __init__(self, x, y, list_prod, list_wh, catalog):
         Order.instance_created += 1
         self.id = Order.instance_created - 1
-        self.x = int(x)
-        self.y = int(y)
+        self.position = Position(int(x), int(y))
         self.items_pending = {i: 0 for i in range(400)}
         self.weight = 0
         for each in list_prod:
             self.items_pending[int(each)] += 1
             self.weight += catalog.weight[int(each)]
-        self.distances = {i: self.distance(list_wh[i], self) for i in range(len(list_wh))}
-        self.available = {i: self.is_available(list_wh) for i in range(len(list_wh))}
+        self.distances = {i: self.position.distance(list_wh[i].position) for i in range(Warehouse.n_warehouses)}
+        self.available = {i: self.is_available(list_wh) for i in range(Warehouse.n_warehouses)}
 
         self.closest_wh = self.find_closest_wh(list_wh)
         self.delivered = False

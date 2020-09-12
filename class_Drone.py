@@ -1,4 +1,4 @@
-from class_other import Grid
+from class_other import Position
 
 
 class Parcel(object):
@@ -7,8 +7,7 @@ class Parcel(object):
     # loading / unloading a parcel represents an instruction to be recorded for scoring
 
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        self.destination = Position(x, y)
         self.inventory = {i: 0 for i in range(400)}
         self.weight = 0
 
@@ -16,7 +15,9 @@ class Parcel(object):
         return str(("dest:", (self.x, self.y), "weight:", self.weight, self.inventory))
 
 
-class Drone(Grid):
+class Drone(object):
+
+    #
 
     n_drones = 30
     max_cap = 200
@@ -25,13 +26,12 @@ class Drone(Grid):
 
     instance_created = 0
 
-    # from Main import weight
-
     def __init__(self, x=start_x, y=start_y):
         Drone.instance_created += 1
         self.id = Drone.instance_created - 1
-        self.x = x
-        self.y = y
+        # self.x = x
+        # self.y = y
+        self.position = Position(x, y)
         self.max_cap = self.max_cap
         self.load = 0
         self.spare_cap = self.max_cap
@@ -39,10 +39,10 @@ class Drone(Grid):
         self.time_steps = 0
 
     def move_n_load(self, warehouse, order, kvp, catalog, instructions):
-        self.time_steps += self.distance(self, warehouse) + 1
-        self.x = warehouse.x
-        self.y = warehouse.y
-        parcel = Parcel(order.x, order.y)
+        self.time_steps += self.position.distance(warehouse.position) + 1
+        self.position.x = warehouse.position.x
+        self.position.y = warehouse.position.y
+        parcel = Parcel(order.position.x, order.position.y)
 
         for each in kvp:
             parcel.inventory[each] += kvp[each]
@@ -58,9 +58,9 @@ class Drone(Grid):
         instructions.add_instruction([self.id, "L", order.id, list(kvp.keys())[0], list(kvp.values())[0]])
 
     def move_n_deliver(self, order, parcel, instructions):
-        self.time_steps += self.distance(self, parcel) + 1
-        self.x = parcel.x
-        self.y = parcel.y
+        self.time_steps += self.position.distance(parcel) + 1
+        self.position.x = parcel.destination.x
+        self.position.y = parcel.destination.y
         for each in parcel.inventory:
             if parcel.inventory[each] > 0:
                 order.items_pending[each] -= parcel.inventory[each]

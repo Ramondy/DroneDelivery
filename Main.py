@@ -1,5 +1,5 @@
 ## imports
-from class_other import Catalog, Grid, Instructions
+from class_other import Catalog, Grid, Instructions, Position
 from class_Drone import Drone
 from class_Order import Order
 from class_Warehouse import Warehouse
@@ -43,17 +43,18 @@ if __name__ == '__main__':
     determine_wh_seq(wh)
 
     #for drone in drones:
-    sum = 0
-    for i in wh:
-        for j in wh[i].closest_orders:
-            sum += j[4]
-    print(sum)
+    # sum = 0
+    # for i in wh:
+    #     for j in wh[i].closest_orders:
+    #         sum += j[4]
+    # print(sum)
+    #
+    # sum = 0
+    # for i in orders:
+    #     for j in orders[i].available:
+    #         sum += orders[i].available[j]
+    # print(sum)
 
-    sum = 0
-    for i in orders:
-        for j in orders[i].available:
-            sum += orders[i].available[j]
-    print(sum)
 
 
 
