@@ -39,12 +39,8 @@ class Grid(object):
     ## it is guaranteed that no order is located on the same location that a warehouse
     ## more than one drone are allowed to share a location
 
-    deadline = 112993
-    x_dim = 400
-    y_dim = 600
-
-    def __init__(self):
-        self.area = self.x_dim * self.y_dim
+    def __init__(self, x, y):
+        self.area = x * y
 
 
 class Instructions(object):

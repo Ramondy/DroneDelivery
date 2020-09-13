@@ -1,4 +1,3 @@
-import math
 from class_Warehouse import Warehouse
 from class_other import Position
 
@@ -11,23 +10,24 @@ class Order(object):
     n_orders = 1250
     n_instances = 0
 
-    def __init__(self, x, y, n_items, list_order_items_raw, items):
+    def __init__(self, x, y, n_items, list_order_items_raw, items, warehouses):
         Order.n_instances += 1
         self.id = Order.n_instances - 1
         self.destination = Position(int(x), int(y))
-        self.n_items = n_items
+        self.n_items = int(n_items)
         self.n_delivered = 0
+        self.delivered = False
+
+        # calculate distance to every warehouse, store in dict:
+        self.distances = {i: self.destination.distance(warehouses[i].position) for i in range(Warehouse.n_warehouses)}
+        for each in warehouses:
+            warehouses[each].set_distances(self.id, self.distances[each], item=False)
 
         # create order_items, stored in a list inside the order:
-        self.order_items = [Order_item(order=self, item_id=int(each), items=items) for each in list_order_items_raw]
+        self.order_items = [Order_item(order=self, item_id=int(each), items=items, warehouses=warehouses)
+                            for each in list_order_items_raw]
 
 
-        # self.items_pending = {i: 0 for i in range(400)}
-        # self.weight = 0
-        # for each in list_items:
-        #     self.items_pending[int(each)] += 1
-        #     self.weight += list_items.weight[int(each)]
-        # self.distances = {i: self.position.distance(list_wh[i].position) for i in range(Warehouse.n_warehouses)}
         # self.available = {i: self.is_available(list_wh) for i in range(Warehouse.n_warehouses)}
         #
         # self.closest_wh = self.find_closest_wh(list_wh)
@@ -62,11 +62,18 @@ class Order_item(Order):
 
     n_instances = 0
 
-    def __init__(self, order, item_id, items):
+    def __init__(self, order, item_id, items, warehouses):
         Order_item.n_instances += 1
         self.id = Order_item.n_instances - 1
+
+        # inherited from order
         self.order_id = order.id
         self.destination = order.destination
+        self.distances = order.distances
+        for each in warehouses:
+            warehouses[each].set_distances(self.id, self.distances[each], item=True)
+
+        # specific to order_item
         self.item_id = item_id
         self.weight = items[item_id].weight
 

@@ -1,5 +1,5 @@
 ## imports
-from class_other import Item, Grid, Instructions, Position
+from class_other import Item, Grid, Instructions
 from class_Drone import Drone
 from class_Order import Order
 from class_Warehouse import Warehouse
@@ -7,25 +7,52 @@ from class_Warehouse import Warehouse
 from func_other import *
 from input_data import weight, warehouse_raw, orders_raw
 
+from pulp import *
+
 
 if __name__ == '__main__':
 
     ### load data, create objects
-    grid = Grid()
+    grid = Grid(400, 600)
     instructions = Instructions()
 
-    items = {i: Item(int(weight[i])) for i in range(Item.n_items)}
+    items = {i: Item(weight=int(weight[i])) for i in range(Item.n_items)}
 
-    warehouses = {i: Warehouse(warehouse_raw[i][0], warehouse_raw[i][1], warehouse_raw[i][2])
+    warehouses = {i: Warehouse(x=warehouse_raw[i][0], y=warehouse_raw[i][1], inventory=warehouse_raw[i][2])
                   for i in range(Warehouse.n_warehouses)}
 
     drones = {i: Drone() for i in range(Drone.n_drones)}
 
-    orders = {i: Order(to_list(orders_raw[i][0])[0], to_list(orders_raw[i][0])[1],  # x, y
-                       to_list(orders_raw[i][1]), to_list(orders_raw[i][2]),         # n_items, list_order_items_raw
-                       items) for i in range(Order.n_orders)}
+    orders = {i: Order(x=string_to_list(orders_raw[i][0])[0], y=string_to_list(orders_raw[i][0])[1],
+                       n_items=orders_raw[i][1], list_order_items_raw=string_to_list(orders_raw[i][2]),
+                       items=items, warehouses=warehouses) for i in range(Order.n_orders)}
 
-    print(orders[0].order_items[0])
+    # orders_smpl = sample_orders(orders, 10) # Order.n_orders
+    orders_smpl = orders
+
+############## LP:
+
+    supply_nodes = [warehouses[i].id for i in range(warehouses[0].n_warehouses)]
+    demand_nodes = [orders_smpl[i].order_items[j].id for i in range(len(orders_smpl)) for j in
+                    range(orders_smpl[i].n_items)]
+    products = [orders_smpl[i].order_items[j].item_id for i in range(len(orders_smpl)) for j in
+                    range(orders_smpl[i].n_items)]
+
+    routes_wip = list(zip(demand_nodes, products))
+    routes = [(w, oi_p[0], oi_p[1]) for w in supply_nodes for oi_p in routes_wip]
+
+    costs = [[warehouses[i].distances_to_order_items[j] for j in range(orders[0].order_items[0].n_instances)]
+             for i in range(warehouses[0].n_warehouses)]
+    costs = makeDict([supply_nodes, demand_nodes], costs, 0)
+
+    model = LpProblem(name='transpo', sense=LpMinimize)
+    vars = LpVariable.dicts("route", routes, lowBound=0, upBound=1, cat='Integer') # define variables
+
+    # enter supply, demand, cost
+    model += lpSum([vars[(w, oi, p)] * costs[w][oi] for (w, oi, p) in routes]) # define objective function | cost is 1 per distance_unit
+
+
+
 
 
 

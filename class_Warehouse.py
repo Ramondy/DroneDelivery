@@ -23,6 +23,17 @@ class Warehouse(object):
         self.position = Position(x, y)
         self.inventory = inventory
         # self.closest_orders = []
+        self.distances_to_orders = {}
+        self.distances_to_order_items = {}
+
+    def set_distances(self, id, distance, item=False):
+        # to calculate distance to every order and order_item
+        if item:
+            self.distances_to_order_items[id] = distance
+        else:
+            self.distances_to_orders[id] = distance
+
+
 
     # def sort_closest_orders(self):
     #     # print("Original List: ", self.closest_orders)
