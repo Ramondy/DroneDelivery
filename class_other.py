@@ -12,6 +12,12 @@ class Item(object):
         Item.n_instances += 1
         self.id = Item.n_instances - 1
         self.weight = weight
+        self.orders = []
+        self.order_items = []
+
+    def add_order_items(self, order_item):
+        self.orders.append(order_item.order_id)
+        self.order_items.append(order_item.id)
 
 
 class Position(object):

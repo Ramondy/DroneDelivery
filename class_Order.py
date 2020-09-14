@@ -24,7 +24,7 @@ class Order(object):
             warehouses[each].set_distances(self.id, self.distances[each], item=False)
 
         # create order_items, stored in a list inside the order:
-        self.order_items = [Order_item(order=self, item_id=int(each), items=items, warehouses=warehouses)
+        self.order_items = [Order_item(order=self, item=items[int(each)], warehouses=warehouses)
                             for each in list_order_items_raw]
 
 
@@ -62,7 +62,7 @@ class Order_item(Order):
 
     n_instances = 0
 
-    def __init__(self, order, item_id, items, warehouses):
+    def __init__(self, order, item, warehouses):
         Order_item.n_instances += 1
         self.id = Order_item.n_instances - 1
 
@@ -74,11 +74,14 @@ class Order_item(Order):
             warehouses[each].set_distances(self.id, self.distances[each], item=True)
 
         # specific to order_item
-        self.item_id = item_id
-        self.weight = items[item_id].weight
+        self.item_id = item.id
+        self.weight = item.weight
 
         self.warehouse = None # will be assigned when optimization problem is solved
         self.delivered = False
+
+        # update list of order_items in item:
+        item.add_order_items(self)
 
     def __str__(self):
         return str((self.order_id, str(self.destination), self.item_id, self.weight))

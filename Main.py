@@ -27,39 +27,78 @@ if __name__ == '__main__':
                        n_items=orders_raw[i][1], list_order_items_raw=string_to_list(orders_raw[i][2]),
                        items=items, warehouses=warehouses) for i in range(Order.n_orders)}
 
-    # orders_smpl = sample_orders(orders, 10) # Order.n_orders
-    orders_smpl = orders
+    ### comment out the next line to run on full dataset
+    # orders = sample_orders(orders, 10) - FIX GEOMETRY
 
-############## LP:
 
-    supply_nodes = [warehouses[i].id for i in range(warehouses[0].n_warehouses)]
-    demand_nodes = [orders_smpl[i].order_items[j].id for i in range(len(orders_smpl)) for j in
-                    range(orders_smpl[i].n_items)]
-    products = [orders_smpl[i].order_items[j].item_id for i in range(len(orders_smpl)) for j in
-                    range(orders_smpl[i].n_items)]
+    ### prepare data for LP:
+    # https://coin-or.github.io/pulp/CaseStudies/a_transportation_problem.html
 
-    routes_wip = list(zip(demand_nodes, products))
-    routes = [(w, oi_p[0], oi_p[1]) for w in supply_nodes for oi_p in routes_wip]
+    supply_nodes = [warehouses[i].id for i in range(warehouses[0].n_warehouses)]  # list of warehouse.id
 
-    costs = [[warehouses[i].distances_to_order_items[j] for j in range(orders[0].order_items[0].n_instances)]
-             for i in range(warehouses[0].n_warehouses)]
+    demand_nodes = [orders[i].order_items[j].id for i in range(len(orders)) for j in  # list of order_item.id
+                    range(orders[i].n_items)]
+
+    products = [items[i].id for i in items]  # list of item.id
+    product_by_order_item = [orders[i].order_items[j].item_id   # list of item.id by order_item
+                             for i in range(len(orders))
+                             for j in range(orders[i].n_items)]
+
+    # product_by_order_item_dict = {demand_nodes[i] : {product_by_order_item_list[i] : 1} for i in range(len(demand_nodes))}
+
+    supply = {i: warehouses[i].inventory for i in range(warehouses[0].n_warehouses)}
+
+    demand = {i: {product_by_order_item[i]: 1} for i in demand_nodes}
+
+    routes = list(zip(demand_nodes, product_by_order_item))
+    routes = [(w, oi_p[0], oi_p[1]) for w in supply_nodes for oi_p in routes]  # list of (warehouse.id, order_item.id, item.id
+
+    costs = [
+            [warehouses[i].distances_to_order_items[j] for j in range(orders[0].order_items[0].n_instances)]
+             for i in range(warehouses[0].n_warehouses)
+            ]
     costs = makeDict([supply_nodes, demand_nodes], costs, 0)
 
-    model = LpProblem(name='transpo', sense=LpMinimize)
+    ### LP:
+    model = LpProblem(name='transportation', sense=LpMinimize)
     vars = LpVariable.dicts("route", routes, lowBound=0, upBound=1, cat='Integer') # define variables
 
-    # enter supply, demand, cost
-    model += lpSum([vars[(w, oi, p)] * costs[w][oi] for (w, oi, p) in routes]) # define objective function | cost is 1 per distance_unit
+    # objective function
+    model += lpSum([vars[(w, oi, p)] * costs[w][oi] for (w, oi, p) in routes]), "Sum_of_Transporting_Costs"
+    # model.to_json("lpmodel.txt")
 
+    # constraints
+    # supply
+    for w in supply_nodes:
+        for p in products:
+            model += lpSum([vars[w, oi, p] for oi in items[p].order_items]) <= supply[w][p],\
+                     "Sum_of_Products_%s_out_of_Warehouse_%d" %(p, w)
 
+    # demand
+    count = 0
+    for i in range(len(demand_nodes)):
+        model += lpSum([vars[w, demand_nodes[i], product_by_order_item[i]] for w in warehouses]) >= demand[demand_nodes[i]][product_by_order_item[i]], \
+                 "Sum_of_Products_%s_into_Order_item_%d" %(product_by_order_item[i], demand_nodes[i])
+
+    model.to_json("lpmodel.txt")
+
+    # print(vars)
+    # print(vars[6, 9356, 351])
+
+    # print(len(supply_nodes), supply_nodes[0])
+    # print(len(products), products[0])
+    # print(len(demand_nodes), demand_nodes[0])
+    # print(len(product_by_order_item), product_by_order_item[0])
+    # print(demand)
+
+    # print(items[0].orders)
+    # print([each.item_id for each in orders[187].order_items])
 
 
 
 
     # for i in range(10):
     #     warehouses[i].sort_closest_orders()
-
-
 
     ### data exploration
     # for each in wh:
